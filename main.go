@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -30,8 +31,10 @@ func main() {
 
 	app.Post("/graphql", func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
-		fmt.Println(c.Body())
-		return c.SendString("Hello, World!")
+		// fmt.Println(c.Body())
+		res_ := graphql.Do(graphql.Params{Schema: schema, RequestString: string(c.Body())})
+		result, _ := json.Marshal(res_)
+		return c.Send(result)
 	})
 
 	log.Fatal(app.Listen(":3000"))
