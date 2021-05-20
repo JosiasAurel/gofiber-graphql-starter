@@ -1,17 +1,38 @@
 package main
 
 import (
-    "log"
+	"fmt"
+	"log"
 
-    "github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2"
+	"github.com/graphql-go/graphql"
 )
 
 func main() {
-    app := fiber.New()
+	app := fiber.New()
 
-    app.Get("/", func (c *fiber.Ctx) error {
-        return c.SendString("Hello, World!")
-    })
+	// sample field
+	fields := graphql.Fields{
+		"hello": &graphql.Field{
+			Type:    graphql.String,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) { return "Hello", nil },
+		},
+	}
 
-    log.Fatal(app.Listen(":3000"))
+	rootQuery := graphql.ObjectConfig{Name: "RootQuery", Fields: fields}
+	schemConf := graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}
+	schema, err := graphql.NewSchema(schemConf)
+	fmt.Println(schema)
+
+	if err != nil {
+		log.Fatal("Failed to create a new schema with error, %v", err)
+	}
+
+	app.Post("/graphql", func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+		fmt.Println(c.Body())
+		return c.SendString("Hello, World!")
+	})
+
+	log.Fatal(app.Listen(":3000"))
 }
